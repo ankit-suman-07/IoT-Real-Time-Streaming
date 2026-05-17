@@ -1,1 +1,3 @@
-/model/bike_model.pkl
+model/
+*.pkl
+*.joblib

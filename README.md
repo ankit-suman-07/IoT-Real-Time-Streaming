@@ -1,5 +1,5 @@
-# Real-Time Bike Rental Prediction — Apache Kafka Streams
-### ENGR 5785G — Assignment 1
+# Real-Time Bike Rental Prediction (Apache Kafka Streams)
+### ENGR 5785G: Assignment 1
 
 A real-time streaming pipeline that reads bike sharing sensor data row by row, streams it through Apache Kafka, runs a Random Forest ML prediction on each record using Kafka Streams, and displays live results on a web dashboard.
 

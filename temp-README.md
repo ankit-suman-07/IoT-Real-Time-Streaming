@@ -45,10 +45,9 @@ UI Dashboard        → live chart + table at http://localhost:5002
 
 | Metric | Score |
 |---|---|
-| Algorithm | Random Forest Regressor (30 trees) |
-| MAE (Mean Absolute Error) | 43.97 |
-| RMSE (Root Mean Squared Error) | 68.16 |
-| R² Score (Accuracy) | 0.85 |
+| Algorithm | Random Forest Regressor (100 trees) |
+| MAE | ~33.21 |
+| R² Score | ~0.89 |
 
 ---
 
@@ -468,7 +467,7 @@ docker-compose down
 
 ## Video Demo
 
-[Add your YouTube unlisted / Google Drive / OneDrive link here]
+[Link]
 
 ---
 

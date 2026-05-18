@@ -71,6 +71,7 @@ public class StreamsProcessor {
                 HttpResponse<String> response = client.send(request,
                         HttpResponse.BodyHandlers.ofString());
 
+                System.out.println("MODEL RESPONSE: " + response.body());
                 // Build output message
                 JsonObject result = new JsonObject();
                 result.add("input", record);

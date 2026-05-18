@@ -1,33 +1,56 @@
 @echo off
+set BASE=%~dp0
 
-call .venv\Scripts\activate
+echo =====================================
+echo Starting Real-Time Streaming Project
+echo =====================================
 
-echo Starting Kafka...
-start "Kafka Check" cmd /k "docker ps"
+echo.
+echo [1/6] Starting Docker (Kafka + Zookeeper)...
 
-echo Starting Model Server...
-start "Model Server" cmd /k "cd /d %~dp0 && call .venv\Scripts\activate && python model_server.py"
+REM Start Docker Desktop if not running
+start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
 
-timeout /t 3
+timeout /t 10 >nul
 
-echo Starting UI Server...
-start "UI Server" cmd /k "cd /d %~dp0 && call .venv\Scripts\activate && python ui_server.py"
+REM Start Kafka stack
+start "KAFKA_DOCKER" cmd /k "title KAFKA_DOCKER && cd /d %BASE% && docker compose up"
 
-timeout /t 3
+timeout /t 10 >nul
 
-echo Starting Streams Processor...
-start "Streams Processor" cmd /k "cd /d %~dp0 && mvn exec:java "-Dexec.mainClass=com.assignment.StreamsProcessor""
+echo.
+echo [2/6] Starting Model Server...
+start "MODEL_SERVER" cmd /k "title MODEL_SERVER && cd /d %BASE% && call .venv\Scripts\activate && python model_server.py"
 
-timeout /t 5
+timeout /t 3 >nul
 
-echo Starting Output Consumer...
-start "Output Consumer" cmd /k "cd /d %~dp0 && mvn exec:java "-Dexec.mainClass=com.assignment.OutputConsumer""
+echo.
+echo [3/6] Starting UI Server...
+start "UI_SERVER" cmd /k "title UI_SERVER && cd /d %BASE% && call .venv\Scripts\activate && python ui_server.py"
 
-timeout /t 3
+timeout /t 3 >nul
 
-echo Starting Producer...
-start "Producer" cmd /k "cd /d %~dp0 && mvn exec:java "-Dexec.mainClass=com.assignment.Producer""
+echo.
+echo [4/6] Starting Streams Processor...
+start "STREAMS_PROCESSOR" cmd /k "title STREAMS_PROCESSOR && cd /d %BASE% && mvn exec:java -Dexec.mainClass=com.assignment.StreamsProcessor"
 
-echo All components started. Opening browser...
-timeout /t 5
+timeout /t 5 >nul
+
+echo.
+echo [5/6] Starting Output Consumer...
+start "OUTPUT_CONSUMER" cmd /k "title OUTPUT_CONSUMER && cd /d %BASE% && mvn exec:java -Dexec.mainClass=com.assignment.OutputConsumer"
+
+timeout /t 3 >nul
+
+echo.
+echo [6/6] Starting Producer...
+start "PRODUCER" cmd /k "title PRODUCER && cd /d %BASE% && mvn exec:java -Dexec.mainClass=com.assignment.Producer"
+
+echo.
+echo =====================================
+echo All services started successfully!
+echo Opening UI...
+echo =====================================
+
+timeout /t 5 >nul
 start http://localhost:5002

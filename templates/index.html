@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bike Rental Predictions</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 2rem;
+    }
+    h1 { color: #38bdf8; margin-bottom: 0.5rem; }
+    p  { color: #94a3b8; margin-bottom: 2rem; }
+
+    .stats {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      min-width: 160px;
+    }
+    .card .label {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+    .card .value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #38bdf8;
+    }
+
+    .chart-box {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th {
+      background: #334155;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #334155;
+      font-size: 14px;
+    }
+    tr:last-child td { border-bottom: none; }
+    .badge {
+      background: #0ea5e9;
+      color: white;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🚴 Real-Time Bike Rental Predictions</h1>
+<p>Live predictions streaming from Kafka every second</p>
+
+<div class="stats">
+  <div class="card">
+    <div class="label">Latest prediction</div>
+    <div class="value" id="latest">--</div>
+  </div>
+  <div class="card">
+    <div class="label">Total received</div>
+    <div class="value" id="total">0</div>
+  </div>
+  <div class="card">
+    <div class="label">Current hour</div>
+    <div class="value" id="hour">--</div>
+  </div>
+</div>
+
+<div class="chart-box">
+  <canvas id="chart" height="100"></canvas>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Hour</th>
+      <th>Predicted Rentals</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="table-body"></tbody>
+</table>
+
+<script>
+  const socket = io();
+  let count = 0;
+  const labels = [];
+  const dataPoints = [];
+
+  const ctx = document.getElementById('chart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Predicted Rentals',
+        data: dataPoints,
+        borderColor: '#38bdf8',
+        backgroundColor: 'rgba(56,189,248,0.1)',
+        borderWidth: 2,
+        pointRadius: 3,
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: false,
+      scales: {
+        x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+        y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+      },
+      plugins: {
+        legend: { labels: { color: '#f8fafc' } }
+      }
+    }
+  });
+
+  socket.on('prediction', (data) => {
+    count++;
+
+    // Update stat cards
+    document.getElementById('latest').textContent = data.predicted;
+    document.getElementById('total').textContent = count;
+    document.getElementById('hour').textContent = data.hour;
+
+    // Update chart (keep last 20 points)
+    labels.push('Row ' + count);
+    dataPoints.push(data.predicted);
+    if (labels.length > 20) { labels.shift(); dataPoints.shift(); }
+    chart.update();
+
+    // Add row to table (newest on top)
+    const tbody = document.getElementById('table-body');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${count}</td>
+      <td>${data.hour}:00</td>
+      <td>${data.predicted}</td>
+      <td><span class="badge">Live</span></td>
+    `;
+    tbody.insertBefore(tr, tbody.firstChild);
+
+    // Keep table to last 10 rows
+    if (tbody.rows.length > 10) {
+      tbody.deleteRow(tbody.rows.length - 1);
+    }
+  });
+</script>
+
+</body>
+</html>

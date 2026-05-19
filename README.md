@@ -21,6 +21,10 @@ UI Dashboard        → live chart + table at http://localhost:5002
 
 ---
 
+## Video Demo
+
+[Click Here for demo video](https://youtu.be/Icm5f2lh7sA)
+
 ## Tech Stack
 
 | Component | Technology |

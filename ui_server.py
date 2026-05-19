@@ -3,18 +3,27 @@ from flask_socketio import SocketIO
 from kafka import KafkaConsumer
 import json
 import threading
+import time
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 
 def kafka_listener():
-    consumer = KafkaConsumer(
-        'predictions',
-        bootstrap_servers='localhost:9092',
-        auto_offset_reset='latest',
-        value_deserializer=lambda m: json.loads(m.decode('utf-8'))
-    )
+    consumer = None
+    while consumer is None:
+        try:
+            print("Attempting to connect to Kafka...")
+            consumer = KafkaConsumer(
+                'predictions',
+                bootstrap_servers='localhost:9092',
+                auto_offset_reset='latest',
+                value_deserializer=lambda m: json.loads(m.decode('utf-8'))
+            )
+            print("Connected to Kafka successfully.")
+        except Exception as e:
+            print(f"Kafka not ready yet: {e}. Retrying in 5 seconds...")
+            time.sleep(5)
 
     for message in consumer:
         data = message.value
@@ -22,18 +31,15 @@ def kafka_listener():
         try:
             print("RAW MESSAGE:", data)
 
-            # Safely extract input
             input_data = data.get('input', {})
             prediction_data = data.get('prediction', {})
 
             hour = input_data.get('hr', None)
             predicted = prediction_data.get('predicted_rentals')
 
-            # Handle alternate formats (in case backend changes)
             if predicted is None:
                 predicted = prediction_data.get('prediction')
 
-            # Skip bad messages instead of crashing
             if hour is None or predicted is None:
                 print("Skipping malformed message")
                 continue
